@@ -8,9 +8,6 @@
 //    Description:   Laboratorio 1                                             *
 //                                                                             *
 //------------------------------------------------------------------------------
-// PIC16F887 Configuration Bit Settings
-
-// 'C' source line config statements
 
 // CONFIG1
 #pragma config FOSC = INTRC_NOCLKOUT// Oscillator Selection bits (INTOSCIO oscillator: I/O function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
