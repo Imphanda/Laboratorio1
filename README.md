@@ -34,15 +34,15 @@
 #include <xc.h>
 #define _XTAL_FREQ 8000000
 #include<stdint.h>
-uint8_t semaforo;
-uint8_t contador1;
-uint8_t contador2;
-uint8_t banderaP1;
-uint8_t banderaP2;
-uint8_t banderaE;
-uint8_t numeros[4]={63,6,91,79};
-uint8_t puntos[8]={1,2,4,8,16,32,64,128};
-uint8_t leds123[4]={0,1,2,4};
+uint8_t semaforo;//contador numeros para display y semaforo
+uint8_t contador1;//puntos P1
+uint8_t contador2;//puntos P2
+uint8_t banderaP1;//Antirrebote1
+uint8_t banderaP2;//Antirrebote2
+uint8_t banderaE;//Antirrebote boton inicio
+uint8_t numeros[5]={79,91,6,63,118};//mostrar en el display
+uint8_t puntos[9]={0,1,2,4,8,16,32,64,128};//aumento decadas
+uint8_t leds123[5]={128,128,64,32,224};//aumento semaforo
 
 void inicio(void);
 void display(void);
@@ -50,7 +50,14 @@ void puntajes(void);
 
 void main(void){
     inicio();
-    banderaE=0;
+    banderaE=0;//Habilitar inicio
+    contador1=0;//inicio puntos
+    contador2=0;//inicio puntos
+    semaforo=0;
+    PORTA=puntos[contador1];//Set puertos en 0
+    PORTB=puntos[contador2];
+    PORTC = numeros[4];//Letra H en el display (Hola)
+    PORTD = leds123[semaforo];//Rojo al inicio
     while(1){
     display();
     puntajes();
@@ -72,46 +79,66 @@ void display(void){
          banderaP1=2;//No podran jugar mientras este el semaforo
          banderaP2=2;
          semaforo=0;
-         banderaE=1;
+         banderaE=1;//control
     }
     if(PORTEbits.RE0==0&&banderaE==1){
-        PORTC = numeros[semaforo];
+        contador1=0;//inicio puntos
+        contador2=0;//inicio puntos
+        PORTA=puntos[contador1];//Reinicia los puertos 
+        PORTB=puntos[contador2];
+        PORTC = numeros[semaforo];//Display y Leds
         PORTD = leds123[semaforo];
-        __delay_ms(1000);//tarda 1 segundo en cada numero
+        __delay_ms(600);//tarda 0.6 segundos en cada numero
         if((++semaforo)==4){//al terminar la cuenta regresiva el contador queda en 0
-            semaforo =0;
             banderaP1=0;//Ya puede jugar
             banderaP2=0;//Ya puede jugar
-            contador1=0;
-            contador2=0;
+            banderaE=0;//termina display
+            contador1=0;//inicio puntos
+            contador2=0;//inicio puntos
     }
     }
 }  
 void puntajes(void){
     if(PORTEbits.RE1==1&&banderaP1==0){
-        banderaP1=1;
+        banderaP1=1;//bandera de control
     }
     if(PORTEbits.RE1==0&&banderaP1==1){
-        contador1++;
+        contador1++;//aumento de puntos P1
         PORTA=puntos[contador1];
         banderaP1=0;
-        if(contador1==8&&contador1>contador2){
-            PORTB=0;
-            PORTA=0;
-            PORTAbits.RA7=1;
+        if(contador1==9&&contador1>contador2){
+        PORTA=puntos[8];    
+        banderaP1=2;//Bloquea botones
+        banderaP2=2;
+        contador2=0;//Apaga leds 2do lugar
+        PORTB=puntos[contador2];
+        PORTC = numeros[2];//Numero jugador ganador 1
+        PORTD = leds123[5];
+        PORTDbits.RD3=0;//Las 3 luces de semaforo encendidas
+        PORTDbits.RD1=1;//enciende led ganador
+        PORTDbits.RD6=1;//enciende led ganador
         }
     }
     if(PORTEbits.RE2==1&&banderaP2==0){
-        banderaP2=1;
+        banderaP2=1;//bandera de control
     }
     if(PORTEbits.RE2==0&&banderaP2==1){
-        contador2++;
+        contador2++;//aumento de puntos P2
         PORTB=puntos[contador2];
         banderaP2=0;
-        if(contador2==8&&contador2>contador1){
-            PORTA=0;
-            PORTB=0;
-            PORTBbits.RB7=1;
+        if(contador2==9&&contador2>contador1){
+            PORTB=puntos[8];
+            banderaP1=2;//bloquea botones
+            banderaP2=2;
+            contador1=0;//Apaga leds 2do lugar
+            PORTA=puntos[contador1];
+            banderaP1=2;
+            banderaP2=2;
+            PORTC = numeros[1];//Numero jugador ganador 2
+            PORTD = leds123[5];
+            PORTDbits.RD3=1;//Las 3 luces de semaforo encendidas
+            PORTDbits.RD1=0;//enciende led ganador
+            PORTDbits.RD6=1;//enciende led ganador
         }
     }
 }
